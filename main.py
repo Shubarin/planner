@@ -78,7 +78,8 @@ class Planner(QMainWindow, Ui_MainWindow):
         # Получение даты первого дня текущего месяца
         fdm = date(y, m, 1)
         # первый день месяца для отображения в календаре
-        current_day_table = fdm - timedelta(self.calendar.calendar().dayOfWeek(fdm) - 1) + timedelta(
+        current_day_table = fdm - timedelta(
+            self.calendar.calendar().dayOfWeek(fdm) - 1) + timedelta(
             days=(row * 7 + col))
         self.form.set_date(current_day_table)
         self.form.load_table(current_day_table)
@@ -100,16 +101,22 @@ class Planner(QMainWindow, Ui_MainWindow):
         cur = self.con.cursor()
         cur.execute('''INSERT INTO groups(title) VALUES("")''')
         event_id = cur.execute('''SELECT id FROM groups''').fetchall()[-1][0]
-        period = cur.execute(
-            f'''SELECT id FROM periods WHERE title="{self.form.comboBox.currentText()}"''').fetchone()[0]
+        period = cur.execute(f'SELECT id FROM periods '
+                             f'WHERE title="{self.form.comboBox.currentText()}"').fetchone()[0]
         y, m = self.form.dateEdit.date().getDate()[:2]
         work_days = self.form.spinBox.value() % self.calendar.calendar().daysInMonth(m, y)
         fixed_data = self.form.dateEdit.date().getDate()
         color = self.form.color
         dates = self.eval_dates(work_days, period, fixed_data)
         for fixed_data in dates:
-            cur.execute(f'''INSERT INTO reports (title, period, work_days, fixed_data, event_id) 
-VALUES ("{title}", {str(period)}, {str(work_days)}, "{str(fixed_data)}", {str(event_id)})''')
+            cur.execute(f'INSERT INTO reports '
+                        f'(title, period, work_days, fixed_data, event_id) '
+                        f'VALUES ('
+                        f'"{title}", '
+                        f'{str(period)}, '
+                        f'{str(work_days)}, '
+                        f'"{str(fixed_data)}", '
+                        f'{str(event_id)})')
             cur.execute(f'UPDATE groups '
                         f'SET color="{color}" '
                         f'WHERE id={str(event_id)}')
@@ -124,7 +131,8 @@ VALUES ("{title}", {str(period)}, {str(work_days)}, "{str(fixed_data)}", {str(ev
         res = 0
         intervals = {1: 1, 2: 3, 3: 6, 4: 12}
         for _ in range(intervals[period]):
-            days = self.calendar.calendar().daysInMonth(fixed_date.month, fixed_date.year)
+            days = self.calendar.calendar().daysInMonth(fixed_date.month,
+                                                        fixed_date.year)
             res += days
             fixed_date += timedelta(days=days)
         return res
@@ -135,7 +143,9 @@ VALUES ("{title}", {str(period)}, {str(work_days)}, "{str(fixed_data)}", {str(ev
 
     def eval_dates(self, work_days, period, fixed_date):
         result = []
-        fixed_date = date(*(fixed_date)) + (timedelta(days=work_days - 1) if work_days else timedelta(days=0))
+        fixed_date = date(*(fixed_date)) + \
+                     (timedelta(days=work_days - 1)
+                      if work_days else timedelta(days=0))
         n = self.get_N(period)  # вычисляем количество мероприятий в году, которые нужно добавить
         for _ in range(n):
             interval = self.set_interval(period, fixed_date)
@@ -176,11 +186,14 @@ VALUES ("{title}", {str(period)}, {str(work_days)}, "{str(fixed_data)}", {str(ev
         # Получение даты первого дня текущего месяца
         self.fdm = date(y, m, 1)
         # первый день месяца для отображения в календаре
-        first_day_table = self.fdm - timedelta(self.calendar.calendar().dayOfWeek(self.fdm) - 1)
+        first_day_table = self.fdm - \
+                          timedelta(self.calendar.calendar().dayOfWeek(self.fdm) - 1)
         for i in range(6):
             for j in range(7):
                 new_d = first_day_table + timedelta(days=j + i * 7)
-                d = date(year=new_d.year, month=new_d.month, day=new_d.day).strftime("%d.%m.%y")
+                d = date(year=new_d.year,
+                         month=new_d.month,
+                         day=new_d.day).strftime("%d.%m.%y")
                 cur = self.con.cursor()
 
                 all_info_widget = QWidget(self)
@@ -195,8 +208,13 @@ VALUES ("{title}", {str(period)}, {str(work_days)}, "{str(fixed_data)}", {str(ev
                 dataset = cur.execute(f'''SELECT * FROM reports 
                     WHERE fixed_data="{new_d}"''').fetchall()
                 for line in dataset:
-                    color = cur.execute(f'SELECT color FROM groups WHERE id={str(line[5])}').fetchone()[0]
-                    color = "#" + ''.join(map(lambda x: "%02x" % int(x), color.split()))
+                    color = cur.execute(f'SELECT color FROM groups '
+                                        f'WHERE id={str(line[5])}').fetchone()[0]
+                    color = "#" + ''.join(
+                        map(
+                            lambda x: "%02x" % int(x), color.split()
+                        )
+                    )
                     color = "QLabel { background-color : " + color + ";}"
                     widget = QLabel('\n'.join(line[1].split()), all_info_widget)
                     widget.setStyleSheet(color)
@@ -215,8 +233,11 @@ class FormAddReportInDB(QWidget, Ui_Form):
         # uic.loadUi('AddReportInDB.ui', self)
         self.setupUi(self)
         self.con = sqlite3.connect(DB_NAME)
-        self.comboBox.addItems(sorted(map(lambda x: x[0], self.con.cursor().execute(
-            '''SELECT title FROM periods''').fetchall())))
+        self.comboBox.addItems(sorted(
+            map(
+                lambda x: x[0], self.con.cursor().execute(
+                    'SELECT title FROM periods').fetchall()
+            )))
         self.dateEdit.setDate(date_)
         self.save_btn.clicked.connect(self.saveToDb)
         self.dlt_btn.clicked.connect(self.deleteFromDb)
@@ -231,7 +252,8 @@ class FormAddReportInDB(QWidget, Ui_Form):
             return
         event_id = item.text()
         cur = self.con.cursor()
-        cur_color = cur.execute(f'SELECT color FROM groups WHERE id = "{str(event_id)}"').fetchone()[0]
+        cur_color = cur.execute(f'SELECT color FROM groups '
+                                f'WHERE id = "{str(event_id)}"').fetchone()[0]
         color = QColorDialog.getColor()
         if color.isValid():
             cur_color = color.name()
@@ -274,7 +296,8 @@ class FormAddReportInDB(QWidget, Ui_Form):
                 item = self.tableWidget.item(i, j)
                 if item is not None:
                     row.append(item.text())
-            period = cur.execute(f'SELECT id FROM periods WHERE title="{str(row[1])}"').fetchone()[0]
+            period = cur.execute(f'SELECT id FROM periods '
+                                 f'WHERE title="{str(row[1])}"').fetchone()[0]
             cur.execute(f'UPDATE reports '
                         f'SET '
                         f'title = "{str(row[0])}",'
@@ -312,9 +335,11 @@ class FormAddReportInDB(QWidget, Ui_Form):
         if date_ is None:
             date_ = self.get_date()
         cur = self.con.cursor()
-        res = cur.execute(f'''SELECT * FROM reports WHERE fixed_data="{date_}"''')
+        res = cur.execute(f'SELECT * FROM reports '
+                          f'WHERE fixed_data="{date_}"')
         cur2 = self.con.cursor()
-        res = cur2.execute(f'''SELECT * FROM reports WHERE fixed_data="{date_}"''')
+        res = cur2.execute(f'SELECT * FROM reports '
+                           f'WHERE fixed_data="{date_}"')
         title = [description[0] for description in cur.description][1:]
         self.tableWidget.setColumnCount(len(title))
         self.tableWidget.setHorizontalHeaderLabels(title)
@@ -323,7 +348,8 @@ class FormAddReportInDB(QWidget, Ui_Form):
             self.tableWidget.setRowCount(self.tableWidget.rowCount() + 1)
             for j, elem in enumerate(line[1:]):
                 if j == 1:
-                    elem = cur.execute(f'SELECT title FROM periods WHERE id={elem}').fetchone()[0]
+                    elem = cur.execute(f'SELECT title FROM periods '
+                                       f'WHERE id={elem}').fetchone()[0]
                 self.tableWidget.setItem(i, j, QTableWidgetItem(str(elem)))
         self.tableWidget.resizeRowsToContents()
         self.update()
@@ -362,8 +388,10 @@ class AdditionalForm(QWidget, Add_Ui_Form):
 
     def create_csv(self):
         with open(TMP_CSV_FN, 'w', newline='') as csvfile:
-            writer = csv.writer(
-                csvfile, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer = csv.writer(csvfile,
+                                delimiter=';',
+                                quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL)
             # Получение списка заголовков
             writer.writerow([self.tableWidget.horizontalHeaderItem(i).text()
                              for i in range(self.tableWidget.columnCount())])
@@ -379,7 +407,10 @@ class AdditionalForm(QWidget, Add_Ui_Form):
         workbook = Workbook(xlsx_fname)
         worksheet = workbook.add_worksheet()
         with open(csvfile, 'rt', encoding='utf8') as f:
-            reader = csv.reader(f, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            reader = csv.reader(f,
+                                delimiter=';',
+                                quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL)
             for r, row in enumerate(reader):
                 for c, col in enumerate(row):
                     worksheet.write(r, c, col)
@@ -387,9 +418,11 @@ class AdditionalForm(QWidget, Add_Ui_Form):
 
     def load_table(self):
         cur = self.con.cursor()
-        res = cur.execute(f'SELECT * FROM reports WHERE event_id={str(self.event_id)}')
+        res = cur.execute(f'SELECT * FROM reports '
+                          f'WHERE event_id={str(self.event_id)}')
         cur2 = self.con.cursor()
-        res = cur2.execute(f'SELECT * FROM reports WHERE event_id={str(self.event_id)}')
+        res = cur2.execute(f'SELECT * FROM reports '
+                           f'WHERE event_id={str(self.event_id)}')
         title = [description[0] for description in cur.description][1:]
         self.tableWidget.setColumnCount(len(title))
         self.tableWidget.setHorizontalHeaderLabels(title)
@@ -398,7 +431,8 @@ class AdditionalForm(QWidget, Add_Ui_Form):
             self.tableWidget.setRowCount(self.tableWidget.rowCount() + 1)
             for j, elem in enumerate(line[1:]):
                 if j == 1:
-                    elem = cur.execute(f'SELECT title FROM periods WHERE id={elem}').fetchone()[0]
+                    elem = cur.execute(f'SELECT title FROM periods '
+                                       f'WHERE id={elem}').fetchone()[0]
                 self.tableWidget.setItem(i, j, QTableWidgetItem(str(elem)))
         self.tableWidget.resizeRowsToContents()
         self.update()
@@ -432,8 +466,10 @@ class ReportCalendar(QWidget, Filter_Ui_Form):
 
     def create_csv(self):
         with open(TMP_CSV_FN, 'w', newline='') as csvfile:
-            writer = csv.writer(
-                csvfile, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer = csv.writer(csvfile,
+                                delimiter=';',
+                                quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL)
             # Получение списка заголовков
             writer.writerow([self.tableWidget.horizontalHeaderItem(i).text()
                              for i in range(self.tableWidget.columnCount())])
@@ -449,7 +485,10 @@ class ReportCalendar(QWidget, Filter_Ui_Form):
         workbook = Workbook(xlsx_fname)
         worksheet = workbook.add_worksheet()
         with open(csvfile, 'rt', encoding='utf8') as f:
-            reader = csv.reader(f, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            reader = csv.reader(f,
+                                delimiter=';',
+                                quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL)
             for r, row in enumerate(reader):
                 for c, col in enumerate(row):
                     worksheet.write(r, c, col)
@@ -464,7 +503,8 @@ class ReportCalendar(QWidget, Filter_Ui_Form):
         if title:
             que += f' and title like "%{str(title)}%"'
         if period != '-':
-            period = cur.execute(f'SELECT id FROM periods WHERE title="{str(period)}"').fetchone()[0]
+            period = cur.execute(f'SELECT id FROM periods '
+                                 f'WHERE title="{str(period)}"').fetchone()[0]
             que += f' and period={str(period)}'
         if str(fixed_date) != '2000-01-01':
             que += f' and fixed_data="{str(fixed_date)}"'
@@ -475,7 +515,8 @@ class ReportCalendar(QWidget, Filter_Ui_Form):
         self.lineEdit.setText('')
         self.dateEdit.setDate(QDate(2000, 1, 1))
         cur = self.con.cursor()
-        periods = ['-'] + [x[0] for x in cur.execute(f'''SELECT title FROM periods''').fetchall()]
+        periods = ['-'] + [x[0] for x in cur.execute(f'SELECT title '
+                                                     f'FROM periods').fetchall()]
         self.comboBox.addItems(sorted(periods))
         self.load_table()
 
@@ -491,7 +532,8 @@ class ReportCalendar(QWidget, Filter_Ui_Form):
             for j, elem in enumerate(line[1:]):
                 if j == 1:
                     cur2 = self.con.cursor()
-                    elem = cur2.execute(f'SELECT title FROM periods WHERE id={elem}').fetchone()[0]
+                    elem = cur2.execute(f'SELECT title FROM periods '
+                                        f'WHERE id={elem}').fetchone()[0]
                 self.tableWidget.setItem(i, j, QTableWidgetItem(str(elem)))
         self.tableWidget.resizeRowsToContents()
         self.update()
@@ -508,7 +550,10 @@ class Printer(QWidget):
     def handleOpen(self, file):
         text = ''
         with open(file, 'rt', encoding='utf8') as f:
-            reader = csv.reader(f, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            reader = csv.reader(f,
+                                delimiter=';',
+                                quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL)
             next(reader)
             for r, row in enumerate(reader):
                 for c, col in enumerate(row):
@@ -562,18 +607,23 @@ class Upd_wnd(QWidget, Upd_Ui_Form):
                 h = date(int(year), i, d[key][j]).strftime("%Y-%m-%d")
                 new_dates.append(h)
                 try:
-                    old_date = cur2.execute(f'SELECT id FROM holydays WHERE date="{h}"').fetchone()
+                    old_date = cur2.execute(f'SELECT id FROM holydays '
+                                            f'WHERE date="{h}"').fetchone()
                     if old_date is None:
-                        self.textEdit.setText(self.textEdit.toPlainText() + h + '\n')
-                        cur.execute(f'''INSERT INTO holydays(date) VALUES ("{h}")''')
+                        self.textEdit.setText(self.textEdit.toPlainText() +
+                                              h + '\n')
+                        cur.execute(f'INSERT INTO holydays(date) VALUES ("{h}")')
                 except:
                     pass
-        old_dates = [x[0] for x in cur.execute(f'SELECT date FROM holydays WHERE date like "{year}%"').fetchall()]
+        old_dates = [x[0] for x in cur.execute(f'SELECT date FROM holydays '
+                                               f'WHERE date like "{year}%"').fetchall()]
         # Проверяем, что наши старые даты не изменились, если изменились, то удаляем их
         for o_d in old_dates:
             if o_d not in new_dates:
-                self.textEdit_2.setText(self.textEdit_2.toPlainText() + o_d + '\n')
-                cur.execute(f'DELETE FROM holydays WHERE date="{o_d}"')
+                self.textEdit_2.setText(self.textEdit_2.toPlainText() +
+                                        o_d + '\n')
+                cur.execute(f'DELETE FROM holydays '
+                            f'WHERE date="{o_d}"')
         self.textEdit.setText(self.textEdit.toPlainText() +
                               'Добавлено записей: ' +
                               str(len(self.textEdit.toPlainText().split('\n')) - 1))
