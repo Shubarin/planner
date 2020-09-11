@@ -15,10 +15,10 @@ from PyQt5.QtCore import QDate, Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication, QTableWidgetItem, QVBoxLayout, \
     QLabel, QTextEdit, QWidget, QColorDialog, QFileDialog, QHeaderView, QCalendarWidget
 from UI_designs.mainWindow import Ui_MainWindow
-from UI_designs.AddReportInDB import Ui_Form
-from UI_designs.addition import Add_Ui_Form
-from UI_designs.filter_db import Filter_Ui_Form
-from UI_designs.upd_wnd import Upd_Ui_Form
+from UI_designs.AddReportInDB import Ui_Add_Form
+from UI_designs.addition import Ui_Info_Form
+from UI_designs.filter_db import Ui_Filter_Form
+from UI_designs.upd_wnd import Ui_Upd_Form
 
 DB_NAME = 'data/reports.sqlite'
 UPD_URL = 'http://www.consultant.ru/law/ref/calendar/proizvodstvennye/'
@@ -28,7 +28,7 @@ TMP_CSV_FN = 'tmp/results.csv'
 class Planner(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(Planner, self).__init__()
-        # uic.loadUi('mainWindow.ui', self)
+        # uic.loadUi('ui_designs/mainWindow.ui', self)
         self.setupUi(self)
         self.con = sqlite3.connect(DB_NAME)
         self.calendar.selectionChanged.connect(self.load_table)
@@ -37,15 +37,15 @@ class Planner(QMainWindow, Ui_MainWindow):
         self.load_table()
         # инициализируем форму для добавления событий
         self.form = FormAddReportInDB(self.calendar.selectedDate())
-        self.form.pushButton.clicked.connect(self.addReportInDB)
-        self.action.triggered.connect(self.form.show)
-        self.action_2.triggered.connect(self.report_calendar)
-        self.action_3.triggered.connect(self.update_holydays)
-        self.action_4.triggered.connect(app.exit)
-        self.action_5.triggered.connect(self.info)
-        self.pushButton.clicked.connect(self.form.show)
-        self.pushButton_2.clicked.connect(self.update_holydays)
-        self.pushButton_3.clicked.connect(self.report_calendar)
+        self.form.add_item_btn.clicked.connect(self.addReportInDB)
+        self.action_add.triggered.connect(self.form.show)
+        self.action_export.triggered.connect(self.report_calendar)
+        self.action_upd.triggered.connect(self.update_holydays)
+        self.action_close.triggered.connect(app.exit)
+        self.action_info.triggered.connect(self.info)
+        self.add_btn.clicked.connect(self.form.show)
+        self.upd_btn.clicked.connect(self.update_holydays)
+        self.expott_btn.clicked.connect(self.report_calendar)
         self.table.cellDoubleClicked.connect(self.form.show)
         self.table.cellClicked.connect(self.form_setup)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
@@ -225,12 +225,12 @@ class Planner(QMainWindow, Ui_MainWindow):
         self.update()
 
 
-class FormAddReportInDB(QWidget, Ui_Form):
+class FormAddReportInDB(QWidget, Ui_Add_Form):
     global wnd
 
     def __init__(self, date_):
         super(FormAddReportInDB, self).__init__()
-        # uic.loadUi('AddReportInDB.ui', self)
+        # uic.loadUi('UI_designs/AddReportInDB.ui', self)
         self.setupUi(self)
         self.con = sqlite3.connect(DB_NAME)
         self.comboBox.addItems(sorted(
@@ -241,9 +241,10 @@ class FormAddReportInDB(QWidget, Ui_Form):
         self.dateEdit.setDate(date_)
         self.save_btn.clicked.connect(self.saveToDb)
         self.dlt_btn.clicked.connect(self.deleteFromDb)
-        self.pushButton_2.clicked.connect(self.show_addition)
-        self.pushButton_3.clicked.connect(self.edit_color)
-        self.pushButton_4.clicked.connect(self.add_color)
+        self.dlt_btn_once.clicked.connect(self.deleteOnceFromDb)
+        self.info_btn.clicked.connect(self.show_addition)
+        self.change_color_btn.clicked.connect(self.edit_color)
+        self.choice_color_btn.clicked.connect(self.add_color)
         self.color = "0 255 255"
 
     def edit_color(self):
@@ -331,6 +332,22 @@ class FormAddReportInDB(QWidget, Ui_Form):
         wnd.load_table()
         self.update()
 
+    def deleteOnceFromDb(self):
+        cur = self.con.cursor()
+        for i in range(self.tableWidget.rowCount()):
+            row = []
+            for j in range(self.tableWidget.columnCount()):
+                item = self.tableWidget.item(i, j)
+                if item is not None:
+                    row.append(item.text())
+            cur.execute(f'DELETE FROM reports '
+                        f'WHERE event_id={str(row[4])} and '
+                        f'fixed_data="{str(row[3])}"')
+        self.con.commit()
+        self.load_table()
+        wnd.load_table()
+        self.update()
+
     def load_table(self, date_=None):
         if date_ is None:
             date_ = self.get_date()
@@ -361,16 +378,16 @@ class FormAddReportInDB(QWidget, Ui_Form):
         return date(*self.dateEdit.date().getDate())
 
 
-class AdditionalForm(QWidget, Add_Ui_Form):
+class AdditionalForm(QWidget, Ui_Info_Form):
     def __init__(self, event_id):
         super(AdditionalForm, self).__init__()
-        # uic.loadUi('addition.ui', self)
+        # uic.loadUi('UI_designs/addition.ui', self)
         self.setupUi(self)
         self.con = sqlite3.connect(DB_NAME)
         self.event_id = event_id
         self.load_table()
-        self.pushButton_2.clicked.connect(self.saveToXlsx)
-        self.pushButton.clicked.connect(self.printer)
+        self.export_btn.clicked.connect(self.saveToXlsx)
+        self.print_btn.clicked.connect(self.printer)
 
     def printer(self):
         self.create_csv()
@@ -438,17 +455,17 @@ class AdditionalForm(QWidget, Add_Ui_Form):
         self.update()
 
 
-class ReportCalendar(QWidget, Filter_Ui_Form):
+class ReportCalendar(QWidget, Ui_Filter_Form):
     def __init__(self):
         super(ReportCalendar, self).__init__()
         # uic.loadUi('filter_db.ui', self)
         self.setupUi(self)
         self.con = sqlite3.connect(DB_NAME)
         self.setupFilters()
-        self.pushButton.clicked.connect(self.filter_db)
-        self.pushButton_2.clicked.connect(self.printer)
-        self.pushButton_3.clicked.connect(self.saveToXlsx)
-        self.pushButton_4.clicked.connect(self.setupFilters)
+        self.search_btn.clicked.connect(self.filter_db)
+        self.print_btn.clicked.connect(self.printer)
+        self.export_btn.clicked.connect(self.saveToXlsx)
+        self.reset_btn.clicked.connect(self.setupFilters)
 
     def printer(self):
         self.create_csv()
@@ -496,7 +513,7 @@ class ReportCalendar(QWidget, Filter_Ui_Form):
 
     def filter_db(self):
         cur = self.con.cursor()
-        title = self.lineEdit.text()
+        title = self.title_line.text()
         period = self.comboBox.currentText()
         fixed_date = date(*self.dateEdit.date().getDate())
         que = 'SELECT * FROM reports WHERE id > 0'
@@ -512,7 +529,7 @@ class ReportCalendar(QWidget, Filter_Ui_Form):
 
     def setupFilters(self):
         self.comboBox.clear()
-        self.lineEdit.setText('')
+        self.title_line.setText('')
         self.dateEdit.setDate(QDate(2000, 1, 1))
         cur = self.con.cursor()
         periods = ['-'] + [x[0] for x in cur.execute(f'SELECT title '
@@ -568,7 +585,7 @@ class Printer(QWidget):
         self.editor.close()
 
 
-class Upd_wnd(QWidget, Upd_Ui_Form):
+class Upd_wnd(QWidget, Ui_Upd_Form):
     global wnd
 
     def __init__(self):
@@ -576,12 +593,9 @@ class Upd_wnd(QWidget, Upd_Ui_Form):
         # uic.loadUi('upd_wnd.ui', self)
         self.setupUi(self)
         self.con = sqlite3.connect(DB_NAME)
-        self.pushButton.clicked.connect(self.start_upd)
+        self.upd_btn.clicked.connect(self.start_upd)
 
-    def start_upd(self):
-        self.textEdit.setText('')
-        self.textEdit_2.setText('')
-        year = str(self.dateEdit.date().getDate()[0])
+    def parse_url(self, year):
         try:
             html_20 = urlopen(f'{UPD_URL}{year}/').read().decode(
                 'utf-8')
@@ -598,39 +612,52 @@ class Upd_wnd(QWidget, Upd_Ui_Form):
                     if day.__class__.__name__ == "Tag":
                         if "weekend" in day["class"] or "holiday" in day["class"]:
                             d[month].append(int(day.contents[0]))
-        # пытаемся добавить их в базу (если нет изменений, то ничего не происходит)
+        return d
+
+    def get_new_dates(self, year, weekend_date_of_url):
         cur = self.con.cursor()
         cur2 = self.con.cursor()
         new_dates = []
-        for i, key in enumerate(d, 1):
-            for j in range(len(d[key])):
-                h = date(int(year), i, d[key][j]).strftime("%Y-%m-%d")
+        for i, key in enumerate(weekend_date_of_url, 1):
+            for j in range(len(weekend_date_of_url[key])):
+                h = date(int(year), i, weekend_date_of_url[key][j]).strftime("%Y-%m-%d")
                 new_dates.append(h)
                 try:
                     old_date = cur2.execute(f'SELECT id FROM holydays '
                                             f'WHERE date="{h}"').fetchone()
                     if old_date is None:
-                        self.textEdit.setText(self.textEdit.toPlainText() +
-                                              h + '\n')
+                        self.textEdit.setText(self.textEdit.toPlainText() + h + '\n')
                         cur.execute(f'INSERT INTO holydays(date) VALUES ("{h}")')
                 except:
                     pass
+        self.con.commit()
+        return new_dates
+
+    def remove_old_dates(self, year, new_dates):
+        cur = self.con.cursor()
         old_dates = [x[0] for x in cur.execute(f'SELECT date FROM holydays '
                                                f'WHERE date like "{year}%"').fetchall()]
-        # Проверяем, что наши старые даты не изменились, если изменились, то удаляем их
         for o_d in old_dates:
             if o_d not in new_dates:
-                self.textEdit_2.setText(self.textEdit_2.toPlainText() +
-                                        o_d + '\n')
+                self.textEdit_2.setText(self.textEdit_2.toPlainText() + o_d + '\n')
                 cur.execute(f'DELETE FROM holydays '
                             f'WHERE date="{o_d}"')
-        self.textEdit.setText(self.textEdit.toPlainText() +
-                              'Добавлено записей: ' +
+        self.textEdit.setText(self.textEdit.toPlainText() + 'Добавлено записей: ' +
                               str(len(self.textEdit.toPlainText().split('\n')) - 1))
-        self.textEdit_2.setText(self.textEdit_2.toPlainText() +
-                                'Удалено записей: ' +
+        self.textEdit_2.setText(self.textEdit_2.toPlainText() + 'Удалено записей: ' +
                                 str(len(self.textEdit_2.toPlainText().split('\n')) - 1))
         self.con.commit()
+
+    def start_upd(self):
+        self.textEdit.setText('')
+        self.textEdit_2.setText('')
+        year = str(self.dateEdit.date().getDate()[0])
+        # получаем данные о выходных с сайта
+        weekend_date_of_url = self.parse_url(year)
+        # пытаемся добавить их в базу (если нет изменений, то ничего не происходит)
+        new_dates = self.get_new_dates(year, weekend_date_of_url)
+        # Проверяем, что наши старые даты не изменились, если изменились, то удаляем их
+        self.remove_old_dates(year, new_dates)
         wnd.load_table()
 
 

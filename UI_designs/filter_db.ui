@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>Filter_Form</class>
+ <widget class="QWidget" name="Filter_Form">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -20,7 +20,7 @@
       <widget class="QDateEdit" name="dateEdit"/>
      </item>
      <item row="2" column="0" colspan="3">
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="search_btn">
        <property name="text">
         <string>Найти</string>
        </property>
@@ -40,7 +40,7 @@
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QLineEdit" name="lineEdit"/>
+      <widget class="QLineEdit" name="title_line"/>
      </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
@@ -57,7 +57,7 @@
       </widget>
      </item>
      <item row="0" column="3">
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="print_btn">
        <property name="text">
         <string>Печать..</string>
        </property>
@@ -67,7 +67,7 @@
       </widget>
      </item>
      <item row="1" column="3">
-      <widget class="QPushButton" name="pushButton_3">
+      <widget class="QPushButton" name="export_btn">
        <property name="text">
         <string>Экспорт..</string>
        </property>
@@ -84,7 +84,7 @@
       </widget>
      </item>
      <item row="2" column="3">
-      <widget class="QPushButton" name="pushButton_4">
+      <widget class="QPushButton" name="reset_btn">
        <property name="text">
         <string>Сбросить</string>
        </property>

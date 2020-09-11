@@ -88,7 +88,7 @@
        </spacer>
       </item>
       <item row="3" column="1">
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="upd_btn">
         <property name="text">
          <string>Обновить праздничные дни</string>
         </property>
@@ -98,7 +98,7 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QPushButton" name="pushButton_3">
+       <widget class="QPushButton" name="expott_btn">
         <property name="text">
          <string>Выгрузить график отчетов</string>
         </property>
@@ -108,7 +108,7 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="add_btn">
         <property name="text">
          <string>Добавить событие в календарь</string>
         </property>
@@ -334,21 +334,21 @@
     <property name="title">
      <string>Меню</string>
     </property>
-    <addaction name="action"/>
-    <addaction name="action_2"/>
-    <addaction name="action_3"/>
-    <addaction name="action_4"/>
+    <addaction name="action_add"/>
+    <addaction name="action_export"/>
+    <addaction name="action_upd"/>
+    <addaction name="action_close"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
      <string>О программе</string>
     </property>
-    <addaction name="action_5"/>
+    <addaction name="action_info"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
   </widget>
-  <action name="action">
+  <action name="action_add">
    <property name="text">
     <string>Добавить событие в календарь</string>
    </property>
@@ -356,7 +356,7 @@
     <string>Ctrl+N</string>
    </property>
   </action>
-  <action name="action_2">
+  <action name="action_export">
    <property name="text">
     <string>Выгрузить график отчетов</string>
    </property>
@@ -364,7 +364,7 @@
     <string>Ctrl+S</string>
    </property>
   </action>
-  <action name="action_3">
+  <action name="action_upd">
    <property name="text">
     <string>Обновить праздничные дни</string>
    </property>
@@ -372,7 +372,7 @@
     <string>Ctrl+U</string>
    </property>
   </action>
-  <action name="action_4">
+  <action name="action_close">
    <property name="text">
     <string>Выйти</string>
    </property>
@@ -380,7 +380,7 @@
     <string>Ctrl+W</string>
    </property>
   </action>
-  <action name="action_5">
+  <action name="action_info">
    <property name="text">
     <string>О программе</string>
    </property>
