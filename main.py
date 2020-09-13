@@ -13,16 +13,21 @@ from bs4 import BeautifulSoup
 
 from PyQt5.QtCore import QDate, Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication, QTableWidgetItem, QVBoxLayout, \
-    QLabel, QTextEdit, QWidget, QColorDialog, QFileDialog, QHeaderView, QCalendarWidget
+    QLabel, QTextEdit, QWidget, QColorDialog, QFileDialog, QHeaderView
 from UI_designs.mainWindow import Ui_MainWindow
 from UI_designs.AddReportInDB import Ui_Add_Form
 from UI_designs.addition import Ui_Info_Form
 from UI_designs.filter_db import Ui_Filter_Form
 from UI_designs.upd_wnd import Ui_Upd_Form
 
-DB_NAME = 'data/reports.sqlite'
+def resource_path(relative):
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative)
+    return os.path.join(relative)
+
+DB_NAME = resource_path(os.path.join('data', 'reports.sqlite'))
 UPD_URL = 'http://www.consultant.ru/law/ref/calendar/proizvodstvennye/'
-TMP_CSV_FN = 'tmp/results.csv'
+TMP_CSV_FN = resource_path(os.path.join('tmp', 'result.csv'))
 
 
 class Planner(QMainWindow, Ui_MainWindow):
@@ -210,11 +215,8 @@ class Planner(QMainWindow, Ui_MainWindow):
                 for line in dataset:
                     color = cur.execute(f'SELECT color FROM groups '
                                         f'WHERE id={str(line[5])}').fetchone()[0]
-                    color = "#" + ''.join(
-                        map(
-                            lambda x: "%02x" % int(x), color.split()
-                        )
-                    )
+                    color = "#" + ''.join(map(
+                        lambda x: "%02x" % int(x), color.split()))
                     color = "QLabel { background-color : " + color + ";}"
                     widget = QLabel('\n'.join(line[1].split()), all_info_widget)
                     widget.setStyleSheet(color)
